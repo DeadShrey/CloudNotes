@@ -412,11 +412,16 @@ window.deleteNoteItem = (id) => {
 
 // Sidebar Toggle Logic
 const sidebar = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+const mobileMenuBtn = document.getElementById('mobile-menu-btn'); // New Button
 
-sidebarToggle.addEventListener('click', () => {
+function toggleSidebar() {
     sidebar.classList.toggle('collapsed');
-});
+    // Save preference? Optional.
+}
+
+sidebarToggleBtn.addEventListener('click', toggleSidebar);
+if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
 
 // Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {

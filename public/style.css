@@ -1014,4 +1014,46 @@ input[type="color"]::-webkit-color-swatch {
         bottom: auto;
         right: auto;
     }
+
+    /* Mobile Sidebar Logic */
+    #mobile-menu-btn {
+        display: flex !important; /* Show mobile toggle */
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background-color: rgba(255, 255, 255, 0.7); /* Transparent box */
+        backdrop-filter: blur(4px); /* Glass effect */
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 6px;
+        z-index: 15;
+        opacity: 0.8;
+        transition: opacity 0.2s, transform 0.2s, background-color 0.2s;
+        color: #333;
+    }
+    
+    #mobile-menu-btn:hover {
+        opacity: 1;
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .sidebar {
+        position: absolute;
+        height: 100dvh;
+        z-index: 20;
+        width: 250px;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    /* Override default collapsed width (50px) to be 0/hidden for mobile */
+    .sidebar.collapsed {
+        width: 250px; /* Keep layout width internal so it doesn't squash */
+        transform: translateX(-100%); /* Slide off screen */
+    }
+}
+
+/* Hide mobile toggle on desktop */
+#mobile-menu-btn {
+    display: none;
 }
