@@ -1,0 +1,310 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudNotes</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.ico?v=2" type="image/x-icon">
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-error" style="display: none; text-align: center; margin-top: 20px; position: absolute; top: 60%;">
+            <p style="color: #666; margin-bottom: 10px;">Taking too long?</p>
+            <p style="color: #333; font-weight: 500;">Please open this file using a Local Server (e.g., Live Server extension).</p>
+            <p style="color: #888; font-size: 12px; margin-top: 5px;">Firebase cannot be loaded directly from a file due to browser security.</p>
+        </div>
+    </div>
+
+    <script>
+        // Global Error Handler
+        window.onerror = function(message, source, lineno, colno, error) {
+            const overlay = document.getElementById('loading-overlay');
+            const errorBox = document.getElementById('loading-error');
+            if (overlay) {
+                overlay.classList.remove('fade-out'); // Show overlay if hidden
+                if (errorBox) {
+                    errorBox.style.display = 'block';
+                    errorBox.innerHTML += `<p style="color: red; font-size: 11px; margin-top: 10px;">BSOD: ${message}</p>`;
+                }
+            }
+        };
+
+        // Safety check: specific to file:// protocol issues or network blocks
+        setTimeout(() => {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay && !overlay.classList.contains('fade-out')) {
+                document.getElementById('loading-error').style.display = 'block';
+            }
+        }, 8000); // Increased to 8s to allow for slower connections
+    </script>
+
+    <!-- Generic Modal -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3 id="modal-title">Create a Note</h3>
+            <p id="modal-message" class="modal-message hidden"></p>
+            <input type="text" id="modal-input" placeholder="Enter note title or a note key..." autocomplete="off">
+            <div class="modal-actions">
+                <button id="modal-cancel-btn" class="secondary-btn">Cancel</button>
+                <button id="modal-confirm-btn" class="primary-btn">Create</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Login/Register View -->
+    <div id="auth-container" class="auth-container hidden">
+        <div class="auth-box">
+            <h1>CloudNotes</h1>
+            <p class="auth-subtitle">Minimalist Note Taking</p>
+            <form id="auth-form">
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" id="auth-btn">Log In</button>
+            </form>
+            <p id="auth-switch-text">Don't have an account? <span id="auth-switch-btn">Sign Up</span></p>
+            <p id="auth-error" class="error-msg"></p>
+        </div>
+        
+        <!-- GitHub Link -->
+        <a href="https://github.com/DeadShrey/CloudNotes" target="_blank" class="github-btn">
+            <svg height="24" width="24" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 10px;">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+            </svg>
+            Checkout Repository
+        </a>
+    </div>
+
+    <!-- Main App View -->
+    <div id="app-container" class="app-container hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="header-left">
+                    <!-- Added tooltip for keybind -->
+                    <button id="sidebar-toggle" class="icon-btn" title="Toggle Sidebar (Alt+B)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h2 id="notes-heading">Notes</h2>
+                </div>
+                <!-- Added tooltip for keybind -->
+                <button id="create-note-btn" class="icon-btn" title="New Note (Alt+N)">+</button>
+            </div>
+            <div id="notes-list" class="notes-list">
+                <!-- Notes will be injected here -->
+                <!-- Example item for styling -->
+                <!-- <div class="note-item active">
+                    <h3>My First Note</h3>
+                    <p>Some preview text...</p>
+                </div> -->
+            </div>
+            <div class="user-profile">
+                <span id="user-email">user@example.com</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Editor Panel -->
+        <main class="editor-panel">
+            <div id="editor-view" class="editor-view hidden">
+                <!-- Converted to div for wrapping and rich alignment -->
+                <div id="note-title" class="editable-title" contenteditable="true" placeholder="Untitled Note" spellcheck="false"></div>
+                <!-- Converted to div for per-line alignment -->
+                <div id="note-content" class="editable-content" contenteditable="true" placeholder="Let's write..." spellcheck="false"></div>
+                <div id="save-status" class="save-status"></div>
+            </div>
+            
+            <div id="empty-state" class="empty-state">
+                <p>Select a note or create one.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom Context Menu -->
+    <div id="context-menu" class="context-menu hidden">
+        <!-- Edit Actions -->
+        <div class="menu-group">
+            <div class="menu-item" data-action="cut">Cut</div>
+            <div class="menu-item" data-action="copy">Copy</div>
+            <div class="menu-item" data-action="paste">Paste</div>
+        </div>
+        <div class="menu-divider"></div>
+        
+        <!-- Formatting -->
+        <div class="menu-group">
+            <div class="menu-item" data-action="bold"><b>Bold</b></div>
+            <div class="menu-item" data-action="italic"><i>Italic</i></div>
+            <div class="menu-item" data-action="underline"><u>Underline</u></div>
+        </div>
+        <div class="menu-divider"></div>
+
+        <!-- Grouped Submenus -->
+        <div class="menu-group">
+            <!-- Alignment Submenu Trigger -->
+            <div class="menu-item submenu-trigger">
+                <span>Alignment</span>
+                <span class="submenu-arrow">▶</span>
+                <div class="submenu">
+                    <div class="menu-item" data-action="justifyLeft">Align Left</div>
+                    <div class="menu-item" data-action="justifyCenter">Align Center</div>
+                    <div class="menu-item" data-action="justifyRight">Align Right</div>
+                </div>
+            </div>
+
+            <!-- Font Submenu Trigger -->
+            <div class="menu-item submenu-trigger">
+                <span>Font</span>
+                <span class="submenu-arrow">▶</span>
+                <div class="submenu" style="min-width: 200px;">
+                    <!-- Font Size Control -->
+                    <div class="menu-group size-control">
+                        <span>Size:</span>
+                        <button id="font-dec-btn" class="size-btn">-</button>
+                        <input type="number" id="font-size-input" class="size-input" value="15" min="8" max="72">
+                        <button id="font-inc-btn" class="size-btn">+</button>
+                    </div>
+
+                    <div class="menu-divider"></div>
+
+                     <!-- Font Selection -->
+                    <div class="menu-item" id="change-font-trigger">
+                        <span>Family: <span id="current-font-name" style="margin-left: 2px;">Default</span></span>
+                    </div>
+
+                    <div class="menu-divider"></div>
+                    
+                    <!-- Color Control -->
+                    <div class="menu-group color-control" style="padding: 6px 16px;">
+                        <span style="display:block; margin-bottom: 6px; font-size: 12px; color: #666;">Color:</span>
+                        <div class="color-options" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                             <!-- Black (Default) -->
+                            <div class="color-swatch" data-color="#333333" style="background-color: #333333;" title="Default Black"></div>
+                            <!-- Darker Red -->
+                            <div class="color-swatch" data-color="#d32f2f" style="background-color: #d32f2f;" title="Red"></div>
+                            <!-- Darker Blue -->
+                            <div class="color-swatch" data-color="#1976d2" style="background-color: #1976d2;" title="Blue"></div>
+                            <!-- Darker Green -->
+                            <div class="color-swatch" data-color="#388e3c" style="background-color: #388e3c;" title="Green"></div>
+                            <!-- Darker Yellow (Orange-ish) -->
+                            <div class="color-swatch" data-color="#fbc02d" style="background-color: #fbc02d;" title="Yellow"></div>
+                            
+                            <!-- Picker -->
+                            <div class="color-swatch picker-swatch" title="Custom Color" style="background: linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet);">
+                                <input type="color" id="custom-color-input" style="opacity: 0; width: 100%; height: 100%; cursor: pointer;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Insert Actions (Moved here) -->
+             <div class="menu-item submenu-trigger">
+                <span>Insert</span>
+                <span class="submenu-arrow">▶</span>
+                <div class="submenu">
+                    <div class="menu-item" data-action="insertImage">Image</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Context Menu -->
+    <div id="image-context-menu" class="context-menu hidden">
+        <div class="menu-group">
+             <!-- Width Control -->
+             <div class="size-control">
+                <span style="min-width: 45px;">Width:</span>
+                <button id="img-width-dec" class="size-btn">-</button>
+                <input type="number" id="img-width-input" class="size-input" value="100" min="10" step="10">
+                <button id="img-width-inc" class="size-btn">+</button>
+            </div>
+            
+             <!-- Height Control -->
+             <div class="size-control">
+                <span style="min-width: 45px;">Height:</span>
+                <button id="img-height-dec" class="size-btn">-</button>
+                <input type="number" id="img-height-input" class="size-input" value="100" min="10" step="10">
+                <button id="img-height-inc" class="size-btn">+</button>
+            </div>
+        </div>
+        <div class="menu-divider"></div>
+
+        <!-- Layout & Reset -->
+        <div class="menu-group">
+            <div class="menu-item submenu-trigger">
+                <span>Follow Up Text</span>
+                <span class="submenu-arrow">▶</span>
+                <div class="submenu">
+                    <div class="menu-item" data-action="imgalign-top">Top</div>
+                    <div class="menu-item" data-action="imgalign-middle">Middle</div>
+                    <div class="menu-item" data-action="imgalign-bottom">Bottom</div>
+                </div>
+            </div>
+            
+            <div class="menu-item" data-action="img-reset">
+                <span>Reset Size</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Autocomplete Suggestion Box -->
+    <ul id="suggestion-box" class="suggestion-box hidden"></ul>
+
+    <!-- Font Picker Modal -->
+    <div id="font-picker-overlay" class="modal-overlay hidden">
+        <div class="modal-box" style="padding-bottom: 12px;"> <!-- Adjusted padding -->
+            <h3>Choose Font</h3>
+            <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off" style="margin-bottom: 12px;">
+            <ul id="font-list" class="font-list">
+                <!-- Items injected by JS -->
+            </ul>
+            <div class="modal-actions" style="margin-top: 12px;">
+                <button id="font-picker-cancel" class="secondary-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share/Collaborate Modal -->
+    <div id="share-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3>Collaborate</h3>
+            <p style="margin-bottom: 16px; font-size: 14px; color: #666;">Share this key with others to let them join this note.</p>
+            
+            <div class="input-group">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500;">Note Key</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="share-key-input" readonly style="margin-bottom: 0; background: #f5f5f5; text-align: center; font-family: monospace; font-size: 18px; letter-spacing: 2px;">
+                    <button id="copy-key-btn" class="secondary-btn" title="Copy Key">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 24px;">
+                <button id="share-modal-close-btn" class="primary-btn">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input for Image Upload -->
+    <input type="file" id="img-upload-hidden" accept="image/*" style="display: none;">
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
