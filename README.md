@@ -1,6 +1,6 @@
 # CloudNotes
 
-A simple minimalistic note taking website.
+A simple minimalistic note taking website made using Google Antigravity.
 > https://gs-cloud-notes.web.app
 
 ## Why CloudNotes?
